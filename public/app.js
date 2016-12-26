@@ -72,40 +72,36 @@ $(document).ready(function() {
   });
 
   // Retrieve keypair
-  $('.keypair-btn--retrieve').on('click', function(event) {
-    event.preventDefault();
-    console.log('Retrieve Key Pair button clicked');
-    $('.keypair-retrieved').text('');
+$('.keypair-btn--retrieve').on('click', function(event) {
+  event.preventDefault();
+  console.log('Retrieve Key Pair button clicked');
 
-    $.ajax({
-      method: 'GET',
-      url: '/keypair/retrieve'
-    }).done(function(keypairs) {
-      console.log('Key pair(s) retrieved', keypairs);
-      if (!keypairs.length) {
-        $('.keypair-retrieved').html('No keys retrieved');
-      } else {
-        $('.keypair-retrieved--success')
-          .html('Keys Retrieved:')
-          .css('color', 'green');
+  $.ajax({
+    method: 'GET',
+    url: '/keypair/retrieve'
+  }).done(function(keypairs) {
+    console.log('Key pair(s) retrieved', keypairs);
+    if (!keypairs.length) {
+      $('.keypair-retrieved').html('No keys retrieved');
+    } else {
+      $('.keypair-retrieved--success')
+        .html('Keys Retrieved:')
+        .css('color', 'green');
 
-        // Create an li element for each keypair and append to ul
-        keypairs.forEach(function(keypair) {
-          var keyItem = document.createElement('li');
-          $(keyItem).text(keypair.key);
-          $('.keypair-public').append(keyItem);
-        });
-      }
-    }).error(function(err) {
-      handleError('Key pair retrieved', '.keypair-retrieved', 'text', err);
-    });
+      // Create an li element for each keypair and append to ul
+      keypairs.forEach(function(keypair) {
+        var keyItem = document.createElement('li');
+        $(keyItem).text(keypair.key);
+        $('.keypair-public').append(keyItem);
+      });
+    }
   });
+});
 
   // Authenticate with keypair
   $('.keypair-btn--authenticate').on('click', function(event) {
     event.preventDefault();
     console.log('Authenticate (KeyPair) button clicked');
-    $('.keypair-authenticated').html('')
 
     $.ajax({
       method: 'GET',
@@ -120,15 +116,13 @@ $(document).ready(function() {
           .html('Keypair authentication failed')
           .css('color', 'red');
       }
-    }).error(function(err) {
-      handleError('Key pair authentication', '.keypair-authenticated', 'html', err);
     });
   });
 
   // Create bucket
   $('.bucket-btn--create').on('click', function(event) {
     event.preventDefault();
-    $('.bucket-created').html('');
+    //$('.bucket-created').html('');
     var newBucketName = $('.new-bucket-name').val()
     if (!newBucketName) {
       return $('.bucket-created').html('Enter a bucket name');
@@ -147,29 +141,11 @@ $(document).ready(function() {
     });
   });
 
-  // Create bucket
-  $('.bucket-btn--create').on('click', function(event) {
-    event.preventDefault();
-    var newBucketName = $('.new-bucket-name').val()
-    if (!newBucketName) {
-      return console.log('Need to enter bucket name');
-    }
-
-    $.ajax({
-      method: 'POST',
-      url: '/buckets/create',
-      data: { name: newBucketName }
-    }).done(function(bucket) {
-      console.log('Bucket created', bucket);
-      $('.bucket-created').text(`Bucket ${bucket.name} created!`);
-      $('.new-bucket-name').val('');
-    });
-  });
 
   // List buckets
   $('.bucket-btn--list').on('click', function(event) {
     event.preventDefault();
-    $('.bucket-list').html('');
+    //$('.bucket-list').html('');
     console.log('List Buckets button clicked');
 
     $('.buckets-list')
@@ -201,32 +177,32 @@ $(document).ready(function() {
   });
 
   // Upload file
-  $('.files-btn--upload').on('click', function(event) {
-    event.preventDefault();
+$('.files-btn--upload').on('click', function(event) {
+  event.preventDefault();
+  console.log('Upload file button clicked');
+  $('.files-upload')
+    .html('File upload in process . . .')
+    .css('color', 'orange');
 
-    $('.files-upload').html('');
-    console.log('Upload file button clicked');
+  $.ajax({
+    method: 'GET',
+    url: '/files/upload'
+  }).done(function(file) {
+    console.log('upload', file)
     $('.files-upload')
-      .html('File upload in process . . .')
-      .css('color', 'orange');
-
-    $.ajax({
-      method: 'GET',
-      url: '/files/upload'
-    }).done(function(file) {
-      console.log('upload', file)
-      $('.files-upload')
-        .html(`File ${file.filename} uploaded to ${file.bucket}!`)
-        .css('color', 'green');
-    }).error(function(err) {
-      handleError('File Upload', '.files-upload', 'html', err);
-    });
+      .html(`File ${file.filename} uploaded to ${file.bucket}!`)
+      .css('color', 'green');
+  }).error(function(err) {
+    $('.files-upload')
+      .html(`Error occurred: ${err.statusText}`)
+      .css('color', 'red');
   });
+});
 
   // List files in bucket
   $('.files-btn--list').on('click', function(event) {
     event.preventDefault();
-    $('.files-list').html('');
+    //$('.files-list').html('');
     console.log('List Files in Bucket button clicked');
     $('.files-list')
       .html('Retrieving files . . .')
