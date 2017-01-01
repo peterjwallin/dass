@@ -78,7 +78,6 @@
       <h3>Basic Authentication</h3>
       <div class="row credentials">
         <div class="col-xs-4">
-          <span class="sub-list">a.</span>
           <button class="credentials-btn--show btn btn-lg btn-primary">
             Show Credentials
           </button>
@@ -94,7 +93,6 @@
       </div>
       <div class="row authenticate">
         <div class="col-xs-4">
-          <span class="sub-list">b.</span>
           <button class="auth-btn btn btn-lg btn-primary">
             Authenticate (Basic)
           </button>
@@ -110,7 +108,6 @@
       <h3>Key Pair</h3>
       <div class="row">
         <div class="col-xs-4">
-          <span class="sub-list">a.</span>
           <button class="keypair-btn--generate btn btn-lg btn-primary">
             Generate Key Pair
           </button>
@@ -121,7 +118,6 @@
       </div>
       <div class="row">
         <div class="col-xs-4">
-          <span class="sub-list">b.</span>
           <button class="keypair-btn--retrieve btn btn-lg btn-primary">
             Retrieve Key Pair
           </button>
@@ -137,7 +133,6 @@
       </div>
       <div class="row">
         <div class="col-xs-4">
-          <span class="sub-list">c.</span>
           <button class="keypair-btn--authenticate btn btn-lg btn-primary">
             Authenticate (KeyPair)
           </button>
@@ -151,7 +146,6 @@
       <h3>Buckets</h3>
       <div class="row bucket-create">
         <div class="col-xs-4">
-          <span class="sub-list">b.</span>
           <input class="new-bucket-name" type="text" placeholder="Enter bucket name" />
           <button class="bucket-btn--create btn btn-lg btn-primary">
             Create Bucket
@@ -163,7 +157,6 @@
       </div>
       <div class="row">
         <div class="col-xs-4">
-          <span class="sub-list">a.</span>
           <button class="bucket-btn--list btn btn-lg btn-primary">
             List Buckets
           </button>
@@ -179,7 +172,6 @@
       <h3>Files</h3>
       <div class="row">
         <div class="col-xs-4 files__upload">
-          <span class="sub-list">b.</span>
           <button class="files-btn--upload btn btn-lg btn-primary">
             Upload File
           </button>
@@ -190,7 +182,6 @@
       </div>
       <div class="row">
         <div class="col-xs-4">
-          <span class="sub-list">a.</span>
           <button class="files-btn--list btn btn-lg btn-primary">
             List Files in Buckets
           </button>
@@ -201,13 +192,24 @@
       </div>
       <div class="row">
         <div class="col-xs-4">
-          <span class="sub-list">c.</span>
           <button class="files-btn--download btn btn-lg btn-primary">
             Download Files
           </button>
         </div>
         <div class="col-xs-8 files-downloaded spacer">
           <!-- "DOWNLOADED FILE FROM BUCKET" -->
+        </div>
+      </div>
+      <div class="row file-delete">
+        <div class="col-xs-4">
+          <input class="deleted-bucketid" type="text" placeholder="Enter bucket id" />
+          <input class="deleted-fileid" type="text" placeholder="Enter file id" />
+          <button class="file-btn--delete btn btn-lg btn-primary">
+            Delete File
+          </button>
+        </div>
+        <div class="col-xs-8 file-deleted spacer">
+          <!-- FILE DELETED -->
         </div>
       </div>
     <!-- tutorial end -->

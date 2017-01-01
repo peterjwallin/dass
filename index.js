@@ -14,7 +14,10 @@ var storjCredentials = {
   email:STORJ_EMAIL,
   password:STORJ_PASSWORD
 };
-var KEYRING_PASS = 'sumnF#8kkd5';
+var KEYRING_PASS = 'Shdyrb%sghd';
+var KEYRING_DIR = './';
+//var KEYRING_PASS = 'n@ilbite4';
+//var KEYRING_DIR = '/home/pwallin/.storjcli/';
 
 var storj = require('storj-lib');
 var api = 'https://api.storj.io';
@@ -27,6 +30,24 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 /* Endpoints */
+
+// Delete file
+app.post('/files/delete', function(req, res) {
+  // Info on file to delete
+  var fileInfo = {
+    fileid: req.body.fileid,
+    bucketid: req.body.bucketid
+  };
+
+  client.removeFileFromBucket(fileInfo.bucketid, fileInfo.fileid, function(err) {
+    if (err) {
+      return console.log('error', err.message);
+    }
+    console.log('Removed fileid', fileInfo.fileid);
+    res.status(200).send(fileInfo);
+  });
+
+});
 
 app.get('/files/download', function(req, res) {
   console.log('Getting file to download');
@@ -64,7 +85,7 @@ app.get('/files/download', function(req, res) {
       // https://storj.github.io/core/KeyRing.html#KeyRing__anchor
       // storj.keyRing(<keyRingDir>, <passPhrase>)
       console.log('Getting keyring');
-      var keyring = storj.KeyRing('./', KEYRING_PASS);
+      var keyring = storj.KeyRing(KEYRING_DIR, KEYRING_PASS);
 
       // Where the downloaded file will be saved
       var target = fs.createWriteStream('./public/grumpy-dwnld.jpg');
@@ -179,7 +200,13 @@ app.get('/files/upload', function(req, res) {
     // Key ring to hold key used to interact with uploaded file
     // https://storj.github.io/core/KeyRing.html#KeyRing__anchor
     // storj.keyRing(<keyRingDir>, <passPhrase>)
-    var keyring = storj.KeyRing('./', KEYRING_PASS);
+    var keyring = storj.KeyRing(KEYRING_DIR, KEYRING_PASS);
+    if (err) {
+      console.log('error', err.message);
+    }
+    if (keyring) {
+      console.log('Created keyring');
+    }
 
     // Prepare to encrypt file for upload
     var secret = new storj.DataCipherKeyIv();
@@ -266,6 +293,16 @@ app.get('/keypair/authenticate', function(req, res) {
   client = storj.BridgeClient(api, { keyPair: keypair });
   console.log('Logged in with keypair');
   res.status(200).send('successful');
+
+  /*
+  client.getInfo(function(err, json) {
+    if (err) {
+      return console.log('error', err.message);
+    }
+    console.log(json);
+  });
+  */
+
 })
 
 // Retrieve key pairs
@@ -284,6 +321,7 @@ app.get('/keypair/retrieve', function(req, res) {
     // Send back key pair info to client
     res.status(200).send(keys)
   });
+
 });
 
 //Generate key pair

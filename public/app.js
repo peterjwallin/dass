@@ -247,8 +247,6 @@ $('.files-btn--upload').on('click', function(event) {
   $('.files-btn--download').on('click', function(event) {
     event.preventDefault();
     console.log('Download Files button clicked');
-    $('.files-downloaded').html('');
-
     $('.files-downloaded')
       .html('Downloading in process . . .')
       .css('color', 'orange');
@@ -265,12 +263,40 @@ $('.files-btn--upload').on('click', function(event) {
         // Set grumpy pic
         $('.grumpy-pic').attr('src', './grumpy-dwnld.jpg')
       }
-    }).error(function(err) {
-      handleError('Files download', '.files-downloaded', 'html', err);
     });
   });
 
-});
+  // Delete File
+  $('.file-btn--delete').on('click', function(event) {
+    event.preventDefault();
+    //$('.file-deleted').html('');
+
+    var deletedBucketID = $('.deleted-bucketid').val();
+    var deletedFileID = $('.deleted-fileid').val();
+
+    if (!deletedBucketID) {
+      return $('.file-deleted').html('Missing bucket id');
+    }
+
+    if (!deletedFileID) {
+      return $('.file-deleted').html('Missing file id');
+    }
+
+    $.ajax({
+      method: 'POST',
+      url: '/files/delete',
+      data: { bucketid: deletedBucketID, fileid: deletedFileID}
+    }).done(function(fileInfo) {
+      console.log('File deleted', fileInfo.fileid);
+      $('.file-deleted').text(`File ${fileInfo.fileid} deleted!`);
+      $('.deleted-bucketid').val('');
+      $('.deleted-fileid').val('');
+    }).error(function(err) {
+      handleError('File deleted', '.file-deleted', 'html', err);
+    });
+  });
+
+}); /*end of main function*/
 
 function handleError(subject, className, element, err) {
   if (err) {
