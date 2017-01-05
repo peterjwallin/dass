@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Getting Started with Storj on Heroku</title>
+    <title>Pete's Storage Depot</title>
     <link rel="stylesheet" type="text/css" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" />
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
     <script type="text/javascript" src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
@@ -16,6 +16,7 @@
           <li class="active">
             <a href="/"><span class="glyphicon glyphicon-home"></span> Home</a>
           </li>
+          <!--
           <li>
             <a href="https://devcenter.heroku.com/articles/how-heroku-works"><span class="glyphicon glyphicon-user"></span> How Heroku Works</a>
           </li>
@@ -35,186 +36,194 @@
                 <li><a href="https://devcenter.heroku.com/articles/getting-started-with-jruby">Getting Started with Ruby on Heroku (Microsoft Windows)</a></li>
               </ul>
           </li>
+          -->
         </ul>
         <ul class="nav navbar-nav navbar-right">
-          <li class="navbar-right">
-            <a href="https://storj.io/developers.html"><span class="glyphicon glyphicon-book"></span> Storj Dev Center</a>
+          <li class="navbar-right logout-li hide">
+              <a class="a-logout" href="#"><span class="glyphicon glyphicon-log-out"></span> Logout</a>
           </li>
+          <!--
           <li class="navbar-right">
-            <a href="https://storj.io/community.html"><span class="glyphicon glyphicon-user"></span> Storj Community</a>
+              <a href="logout.html"><span class="glyphicon glyphicon-log-in"></span> Login</a>
           </li>
+          -->
         </ul>
+
       </div>
     </nav>
     <!-- navbar end -->
 
     <div class="container">
+
       <div class="row">
         <div class="col-xs-12">
-          <div class="jumbotron text-center">
-            <a href="/" class="lang-logo">
-              <img src="logo.png">
-            </a>
-            <h1>Getting Started with Storj on Heroku</h1>
-            <p><a href="https://storj.io/">Storj</a> is a distributed cloud storage platform, suitable for static content.<br>This page is an example of hosting and serving assets from Storj.</p>
-            <a type="button" class="btn btn-lg btn-primary" href="http://docs.storj.io/">Quickstart Guide</a>
+          <h1>Pete's Storage Depot</h1>
+          <hr>
+        </div>
+      </div>
+
+      <div class="row login hide">
+        <div class="col-xs-12">
+          <input class="input-login" type="text" placeholder="Enter Passphrase" />
+          <button class="btn-login btn btn-lg btn-primary">Submit</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-xs-12 login-result hide"/>
+      </div>
+
+      <div class="row">
+        <div class="col-xs-4">
+          <div class="container storj-methods hide">
+
+          <!-- Basic Authentication -->
+          <h3>Basic Authentication</h3>
+          <div class="row credentials">
+            <div class="col-xs-4">
+              <button class="credentials-btn--show btn btn-lg btn-primary">
+                Show Credentials
+              </button>
+            </div>
+            <div class="col-xs-8 credentials-result">
+              <div class="row credentials--username">
+                <!-- STORJ_EMAIL -->
+              </div>
+              <div class="row credentials--password">
+                <!-- STORJ_PASSWORD -->
+              </div>
+            </div>
           </div>
+          <div class="row authenticate">
+            <div class="col-xs-4">
+              <button class="auth-btn btn btn-lg btn-primary">
+                Authenticate (Basic)
+              </button>
+            </div>
+            <div class="col-xs-8 auth-result spacer">
+              <!-- AUTHENTICATION RESULT -->
+            </div>
+          </div>
+
+          <!-- Key Pair -->
+          <h3>Key Pair</h3>
+          <div class="row">
+            <div class="col-xs-4">
+              <button class="keypair-btn--generate btn btn-lg btn-primary">
+                Generate Key Pair
+              </button>
+            </div>
+            <div class="col-xs-8">
+              <div class="keypair-generated spacer"></div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-xs-4">
+              <button class="keypair-btn--retrieve btn btn-lg btn-primary">
+                Retrieve Key Pair
+              </button>
+            </div>
+            <div class="col-xs-8">
+              <div class="keypair-retrieved spacer">
+                <span class="keypair-retrieved--success"></span>
+                <ul class="keypair-public">
+                  <!-- "KEY_PAIR" -->
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-xs-4">
+              <button class="keypair-btn--authenticate btn btn-lg btn-primary">
+                Authenticate (KeyPair)
+              </button>
+            </div>
+            <div class="col-xs-8 keypair-authenticated spacer"></div>
+          </div>
+
+
+
+          <!-- Buckets -->
+          <h3>Buckets</h3>
+          <div class="row bucket-create">
+            <div class="col-xs-4">
+              <input class="new-bucket-name" type="text" placeholder="Enter bucket name" />
+              <button class="bucket-btn--create btn btn-lg btn-primary">
+                Create Bucket
+              </button>
+            </div>
+            <div class="col-xs-8 bucket-created">
+              <!-- BUCKET CREATED -->
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-xs-4">
+              <button class="bucket-btn--list btn btn-lg btn-primary">
+                List Buckets
+              </button>
+            </div>
+            <div class="col-xs-6 buckets-list spacer">
+              <!-- BUCKETS -->
+            </div>
+          </div>
+
+
+
+          <!-- Files -->
+          <h3>Files</h3>
+          <div class="row">
+            <div class="col-xs-4 files__upload">
+              <button class="files-btn--upload btn btn-lg btn-primary">
+                Upload File
+              </button>
+            </div>
+            <div class="col-xs-8 files-upload spacer">
+              <!-- FILE TO UPLOAD -->
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-xs-4">
+              <button class="files-btn--list btn btn-lg btn-primary">
+                List Files in Buckets
+              </button>
+            </div>
+            <div class="col-xs-8 files-list spacer">
+              <!-- FILES -->
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-xs-4">
+              <button class="files-btn--download btn btn-lg btn-primary">
+                Download Files
+              </button>
+            </div>
+            <div class="col-xs-8 files-downloaded spacer">
+              <!-- "DOWNLOADED FILE FROM BUCKET" -->
+            </div>
+          </div>
+          <div class="row file-delete">
+            <div class="col-xs-4">
+              <input class="deleted-bucketid" type="text" placeholder="Enter bucket id" />
+              <input class="deleted-fileid" type="text" placeholder="Enter file id" />
+              <button class="file-btn--delete btn btn-lg btn-primary">
+                Delete File
+              </button>
+            </div>
+            <div class="col-xs-8 file-deleted spacer">
+              <!-- FILE DELETED -->
+            </div>
+          </div>
+
+        </div>
+      </div>
+      <div class="col-xs-8">
+        <div class="container welcome hide">
+            <div class="row">
+                Welcome to Pete's Storage Depot
+            </div>
         </div>
       </div>
     </div>
-
-    <hr>
-
-    <!-- tutorial start -->
-    <div class="container storj-methods">
-      <div class="row grumpy-holder">
-        <img src="" alt="Goal: Upload grumpy.jpg into Storj bucket, download grump.jpg from Storj bucket, display downloaded image here"
-        class="grumpy-pic">
-      </div>
-
-      <hr>
-
-      <!-- Basic Authentication -->
-      <h3>Basic Authentication</h3>
-      <div class="row credentials">
-        <div class="col-xs-4">
-          <button class="credentials-btn--show btn btn-lg btn-primary">
-            Show Credentials
-          </button>
-        </div>
-        <div class="col-xs-8 credentials-result">
-          <div class="row credentials--username">
-            <!-- STORJ_EMAIL -->
-          </div>
-          <div class="row credentials--password">
-            <!-- STORJ_PASSWORD -->
-          </div>
-        </div>
-      </div>
-      <div class="row authenticate">
-        <div class="col-xs-4">
-          <button class="auth-btn btn btn-lg btn-primary">
-            Authenticate (Basic)
-          </button>
-        </div>
-        <div class="col-xs-8 auth-result spacer">
-          <!-- AUTHENTICATION RESULT -->
-        </div>
-      </div>
-
-      <hr>
-
-      <!-- Key Pair -->
-      <h3>Key Pair</h3>
-      <div class="row">
-        <div class="col-xs-4">
-          <button class="keypair-btn--generate btn btn-lg btn-primary">
-            Generate Key Pair
-          </button>
-        </div>
-        <div class="col-xs-8">
-          <div class="keypair-generated spacer"></div>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-xs-4">
-          <button class="keypair-btn--retrieve btn btn-lg btn-primary">
-            Retrieve Key Pair
-          </button>
-        </div>
-        <div class="col-xs-8">
-          <div class="keypair-retrieved spacer">
-            <span class="keypair-retrieved--success"></span>
-            <ul class="keypair-public">
-              <!-- "KEY_PAIR" -->
-            </ul>
-          </div>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-xs-4">
-          <button class="keypair-btn--authenticate btn btn-lg btn-primary">
-            Authenticate (KeyPair)
-          </button>
-        </div>
-        <div class="col-xs-8 keypair-authenticated spacer"></div>
-      </div>
-
-      <hr>
-
-      <!-- Buckets -->
-      <h3>Buckets</h3>
-      <div class="row bucket-create">
-        <div class="col-xs-4">
-          <input class="new-bucket-name" type="text" placeholder="Enter bucket name" />
-          <button class="bucket-btn--create btn btn-lg btn-primary">
-            Create Bucket
-          </button>
-        </div>
-        <div class="col-xs-8 bucket-created">
-          <!-- BUCKET CREATED -->
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-xs-4">
-          <button class="bucket-btn--list btn btn-lg btn-primary">
-            List Buckets
-          </button>
-        </div>
-        <div class="col-xs-6 buckets-list spacer">
-          <!-- BUCKETS -->
-        </div>
-      </div>
-
-      <hr>
-
-      <!-- Files -->
-      <h3>Files</h3>
-      <div class="row">
-        <div class="col-xs-4 files__upload">
-          <button class="files-btn--upload btn btn-lg btn-primary">
-            Upload File
-          </button>
-        </div>
-        <div class="col-xs-8 files-upload spacer">
-          <!-- FILE TO UPLOAD -->
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-xs-4">
-          <button class="files-btn--list btn btn-lg btn-primary">
-            List Files in Buckets
-          </button>
-        </div>
-        <div class="col-xs-8 files-list spacer">
-          <!-- FILES -->
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-xs-4">
-          <button class="files-btn--download btn btn-lg btn-primary">
-            Download Files
-          </button>
-        </div>
-        <div class="col-xs-8 files-downloaded spacer">
-          <!-- "DOWNLOADED FILE FROM BUCKET" -->
-        </div>
-      </div>
-      <div class="row file-delete">
-        <div class="col-xs-4">
-          <input class="deleted-bucketid" type="text" placeholder="Enter bucket id" />
-          <input class="deleted-fileid" type="text" placeholder="Enter file id" />
-          <button class="file-btn--delete btn btn-lg btn-primary">
-            Delete File
-          </button>
-        </div>
-        <div class="col-xs-8 file-deleted spacer">
-          <!-- FILE DELETED -->
-        </div>
-      </div>
-    <!-- tutorial end -->
-    <hr>
-
     <script src="app.js"></script>
   </body>
 </html>

@@ -5,31 +5,93 @@ var async = require('async');
 var bodyParser = require('body-parser');
 var through = require('through');
 var path = require('path');
+var storj = require('storj-lib');
+var session = require('client-sessions');
+
+// App variables
 var localAssetsDir = __dirname + '/public';
 
 //Storj variables
+var api = 'https://api.storj.io';
+var client;
 var STORJ_EMAIL = process.env.STORJ_EMAIL;
 var STORJ_PASSWORD = process.env.STORJ_PASSWORD;
 var storjCredentials = {
   email:STORJ_EMAIL,
   password:STORJ_PASSWORD
 };
-var KEYRING_PASS = 'Shdyrb%sghd';
+
+// Key variables
+var KEYRING_PASS = process.env.KEYRING_PASS;
 var KEYRING_DIR = './';
-//var KEYRING_PASS = 'n@ilbite4';
-//var KEYRING_DIR = '/home/pwallin/.storjcli/';
 
-var storj = require('storj-lib');
-var api = 'https://api.storj.io';
-var client;
-
+//Setup app
 app.set('port', (process.env.PORT || 5000));
-
 app.use(express.static(__dirname + '/public'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(session({
+  cookieName: 'session',
+  secret: process.env.SESSION_SECRET,
+  duration: 30 * 60 * 1000,
+  activeDuration: 5 * 60 * 1000,
+}));
 
 /* Endpoints */
+
+//Status
+app.get ('/user/status', function(req, res) {
+
+  var status = false;
+
+  if (req.session.authenticated) {
+    status = true;
+  }
+
+  console.log('Checking user status');
+
+  res.status(200).send(status)
+
+});
+
+// Login
+app.post('/user/login', function(req, res) {
+
+  console.log('Login button clicked');
+  
+  if (req.body.passphrase == process.env.PASSPHRASE) {
+
+    // Login using the keypair
+    var keypair = storj.KeyPair(process.env.STORJ_PRIVATE_KEY);
+    client = storj.BridgeClient(api, { keyPair: keypair });
+    console.log('Logged in with keypair');
+
+    req.session.authenticated = true;
+
+    res.status(200).send('successful');
+
+  } else {
+
+    res.status(200).send('failed');
+
+  }
+
+});
+
+// Logoff
+app.get('/user/logoff', function(req, res) {
+
+  req.session.authenticated = false;
+
+  console.log('User logged off');
+
+  res.status(200).send(true)
+
+});
+
+
+
+/*----------------------------------------------------------------*/
 
 // Delete file
 app.post('/files/delete', function(req, res) {
@@ -325,6 +387,7 @@ app.get('/keypair/retrieve', function(req, res) {
 });
 
 //Generate key pair
+/*
 app.get('/keypair/generate', function(req, res) {
   if (process.env.STORJ_PRIVATE_KEY) {
     console.log('Private key already exists');
@@ -349,6 +412,40 @@ app.get('/keypair/generate', function(req, res) {
   });
 
 });
+*/
+
+//Generate key pair
+app.get('/keypair/generate', function(req, res) {
+  /*
+  if (process.env.STORJ_PRIVATE_KEY) {
+    console.log('Private key already exists');
+    return res.status(400).send('duplicate');
+  }
+  */
+  // Generate keypair
+  var keypair = storj.KeyPair();
+  console.log('Generating Storj keypair');
+
+  var dir = './.key-ring/' + keypair.getPublicKey();
+
+  if (!fs.existsSync(dir)){
+    fs.mkdirSync(dir);
+    fs.writeFileSync(dir + '/private.key', keypair.getPrivateKey());
+  }
+
+
+  // Add the keypair public key to the user account for authentication
+  /*
+  client.addPublicKey(keypair.getPublicKey(), function(err) {
+    if (err) {
+      return console.log('error', err.message);
+    }
+  */;
+
+  res.status(200).send(dir);
+
+});
+
 
 //Basic authentication
 app.get('/user/authenticate/user-pass', function(req, res) {

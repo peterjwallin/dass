@@ -3,6 +3,109 @@ $(document).ready(function() {
   console.log('jquery ready');
   var grumpyPicId;
 
+  // Status
+  $.ajax({
+    method: 'GET',
+    url: '/user/status'
+  }).done(function(result) {
+
+    if (result) {
+
+      $('.storj-methods').removeClass('hide');
+      $('.welcome').removeClass('hide');
+      $('.login-result').removeClass('hide');
+      $('.logout-li').removeClass('hide');
+
+      $('.login').addClass('hide');
+
+    } else {
+
+      $('.storj-methods').addClass('hide');
+      $('.welcome').addClass('hide');
+      $('.login-result').addClass('hide');
+      $('.logout-li').addClass('hide');
+
+      $('.login').removeClass('hide');
+
+    }
+
+  }).error(function(err) {
+    handleError('Status', '.login-result', 'html', err);
+  });
+
+  // Login
+  $('.btn-login').on('click', function(event) {
+
+    event.preventDefault();
+
+    $('.login-result').html('');
+
+    var phrase = $('.input-login').val()
+
+    $.ajax({
+      method: 'POST',
+      url: '/user/login',
+      data: { passphrase: phrase}
+    }).done(function(result) {
+
+      if (result === 'successful') {
+
+        $('.storj-methods').removeClass('hide');
+        $('.welcome').removeClass('hide');
+        $('.login-result').removeClass('hide');
+        $('.logout-li').removeClass('hide');
+
+        $('.login').addClass('hide');
+        /*
+        $('.login-result')
+          .html('Login successful!')
+          .css('color', 'green');
+        */
+
+      } else {
+
+        $('.login-result').removeClass('hide');
+
+        $('.login-result')
+          .html('Login failed')
+          .css('color', 'red');
+
+      }
+    }).error(function(err) {
+      handleError('Login', '.login-result', 'html', err);
+    });
+  });
+
+  // Logout
+  $('.a-logout').on('click', function(event) {
+
+    event.preventDefault();
+
+    console.log('Logoff button clicked');
+
+    $('.login-result').html('');
+
+    $.ajax({
+      method: 'GET',
+      url: '/user/logoff'
+    }).done(function(result) {
+
+      if (result) {
+        $('.storj-methods').addClass('hide');
+        $('.welcome').addClass('hide');
+        $('.login-result').addClass('hide');
+        $('.logout-li').addClass('hide');
+        $('.login').removeClass('hide');
+      }
+
+    }).error(function(err) {
+      handleError('Login', '.login-result', 'html', err);
+    });
+  });
+
+
+  /*----------------------------------------------------------------*/
+
   // Get client info
   $('.credentials-btn--show').on('click', function(event) {
     event.preventDefault();
@@ -269,7 +372,7 @@ $('.files-btn--upload').on('click', function(event) {
   // Delete File
   $('.file-btn--delete').on('click', function(event) {
     event.preventDefault();
-    //$('.file-deleted').html('');
+    $('.file-deleted').html('');
 
     var deletedBucketID = $('.deleted-bucketid').val();
     var deletedFileID = $('.deleted-fileid').val();
