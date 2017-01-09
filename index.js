@@ -7,6 +7,9 @@ var through = require('through');
 var path = require('path');
 var storj = require('storj-lib');
 var session = require('client-sessions');
+var mnemonic = require('bitcore-mnemonic');
+var bitcore = require('bitcore-lib');
+var dotenv = require('dotenv');
 
 // App variables
 var localAssetsDir = __dirname + '/public';
@@ -26,6 +29,7 @@ var KEYRING_PASS = process.env.KEYRING_PASS;
 var KEYRING_DIR = './';
 
 //Setup app
+dotenv.load();
 app.set('port', (process.env.PORT || 5000));
 app.use(express.static(__dirname + '/public'));
 app.use(bodyParser.json());
@@ -42,6 +46,8 @@ app.use(session({
 //Status
 app.get ('/user/status', function(req, res) {
 
+  console.log('************* Endpoint: login *************');
+
   var status = false;
 
   if (req.session.authenticated) {
@@ -57,31 +63,44 @@ app.get ('/user/status', function(req, res) {
 // Login
 app.post('/user/login', function(req, res) {
 
-  console.log('Login button clicked');
-  
-  if (req.body.passphrase == process.env.PASSPHRASE) {
+  console.log('************* Endpoint: login *************');
 
-    // Login using the keypair
-    var keypair = storj.KeyPair(process.env.STORJ_PRIVATE_KEY);
-    client = storj.BridgeClient(api, { keyPair: keypair });
-    console.log('Logged in with keypair');
+  console.log('Reading passphrase', req.body.passphrase);
 
-    req.session.authenticated = true;
+  var value = new Buffer(req.body.passphrase);
+  var hash = bitcore.crypto.Hash.sha256(value);
+  var bn = bitcore.crypto.BN.fromBuffer(hash);
+  var privateKey = new bitcore.PrivateKey(bn);
+  var address = privateKey.toAddress();
+  console.log('Created private key', address);
 
-    res.status(200).send('successful');
+  // Login using the keypair
+  var keypair = storj.KeyPair(privateKey.toWIF());
+  client = storj.BridgeClient(api, { keyPair: keypair });
 
-  } else {
-
-    res.status(200).send('failed');
-
-  }
+  client.getPublicKeys(function(err, keys) {
+    if (err) {
+      console.log('Authentication with keypair failed');
+      req.session.authenticated = false;
+      res.status(200).send(false);
+    }
+    else {
+      console.log('Logged in with keypair');
+      req.session.authenticated = true;
+      res.status(200).send(true);
+    }
+  });
 
 });
 
 // Logoff
 app.get('/user/logoff', function(req, res) {
 
+  console.log('************* Endpoint: logoff *************');
+
   req.session.authenticated = false;
+
+  client = null;
 
   console.log('User logged off');
 
@@ -89,24 +108,141 @@ app.get('/user/logoff', function(req, res) {
 
 });
 
+//Generate key pair
+app.get('/keypair/generate', function(req, res) {
 
+  // Create private key from passphrase
+  var passphrase = new mnemonic();
+  console.log('Generated passphrase', passphrase.toString());
 
-/*----------------------------------------------------------------*/
+  var value = new Buffer(passphrase.toString());
+  var hash = bitcore.crypto.Hash.sha256(value);
+  var bn = bitcore.crypto.BN.fromBuffer(hash);
+  var privateKey = new bitcore.PrivateKey(bn);
+  var address = privateKey.toAddress();
+  console.log('Created private key', address);
 
-// Delete file
-app.post('/files/delete', function(req, res) {
-  // Info on file to delete
-  var fileInfo = {
-    fileid: req.body.fileid,
-    bucketid: req.body.bucketid
-  };
+  var wif = privateKey.toWIF();
+  console.log('WIF encoded key', privateKey.toWIF());
 
-  client.removeFileFromBucket(fileInfo.bucketid, fileInfo.fileid, function(err) {
+  // Generate keypair for Storj Network
+  var keypair = storj.KeyPair(privateKey.toWIF());
+  console.log('Generated Storj keypair', keypair.getPublicKey());
+
+  var dir = './.key-ring/' + keypair.getPublicKey();
+  if (!fs.existsSync(dir)){
+    fs.mkdirSync(dir);
+    //fs.writeFileSync(dir + '/private.key', keypair.getPrivateKey());
+  }
+  console.log('Created key ring directory');
+
+  // Add the keypair public key to the user account for authentication
+  client.addPublicKey(keypair.getPublicKey(), function(err) {
     if (err) {
       return console.log('error', err.message);
     }
-    console.log('Removed fileid', fileInfo.fileid);
-    res.status(200).send(fileInfo);
+    console.log('Added the keypair public key to the user account');
+  });
+
+  res.status(200).send(value);
+
+});
+
+// Create bucket
+app.post('/buckets/create', function(req, res) {
+
+  var bucketInfo = {
+    name: req.body.name
+  };
+
+  client.createBucket(bucketInfo, function(err, bucket) {
+    if (err) {
+      return console.log('error', err.message);
+    }
+    console.log('Created bucket', bucket);
+    res.status(200).send(bucket);
+  });
+
+});
+
+// Upload file to bucket
+app.get('/files/upload', function(req, res) {
+  console.log('Uploading file');
+
+  // Get first bucket that shows up (for demo purposes)
+  // If you know what bucket you're going to put the file in, then use
+  // that bucketId and skip client.getBuckets()
+  client.getBuckets(function(err, buckets) {
+    if (err) {
+      return console.log('error', err.message);
+    }
+
+    // Use the first bucket
+    var bucketId = buckets[0].id;
+    console.log('Uploading file to', bucketId);
+
+    // Select the file to be uploaded
+    var filepath = './public/grumpy.jpg';
+
+    // Path to temporarily store encrypted version of file to be uploaded
+    var tmppath = filepath + '.crypt';
+
+    // Key ring to hold key used to interact with uploaded file
+    // https://storj.github.io/core/KeyRing.html#KeyRing__anchor
+    // storj.keyRing(<keyRingDir>, <passPhrase>)
+    var keyring = storj.KeyRing(KEYRING_DIR, KEYRING_PASS);
+    if (err) {
+      console.log('error', err.message);
+    }
+    if (keyring) {
+      console.log('Created keyring');
+    }
+
+    // Prepare to encrypt file for upload
+    var secret = new storj.DataCipherKeyIv();
+    var encrypter = new storj.EncryptStream(secret);
+
+    // Encrypt the file to be uploaded and store it temporarily
+    fs.createReadStream(filepath)
+      .pipe(encrypter)
+      .pipe(fs.createWriteStream(tmppath))
+      .on('finish', function() {
+        console.log('Finished encrypting');
+
+        // Create token for uploading to bucket by bucketId
+        client.createToken(bucketId, 'PUSH', function(err, token) {
+          if (err) {
+            console.log('error', err.message);
+          }
+          if (token) {
+            console.log('Created token for file');
+          }
+
+          // Store the file using the bucketId, token, and encrypted file
+          console.log('Attempting to store file in bucket');
+          client.storeFileInBucket(bucketId, token.token, tmppath,
+            function(err, file) {
+              if (err) {
+                return console.log('error', err.message);
+              }
+              console.log('Stored file in bucket');
+
+              // Save key for access to download file
+              keyring.set(file.id, secret);
+
+              // Delete tmp file
+              fs.unlink(tmppath, function(err) {
+                if (err) {
+                  return console.log(err);
+                }
+                console.log('Temporary encrypted file deleted');
+              })
+
+              // Send file info to client
+              res.status(200).send(file);
+            });
+        });
+      });
   });
 
 });
@@ -200,6 +336,37 @@ app.get('/files/download', function(req, res) {
   });
 });
 
+// Delete file
+app.post('/files/delete', function(req, res) {
+  // Info on file to delete
+  var fileInfo = {
+    fileid: req.body.fileid,
+    bucketid: req.body.bucketid
+  };
+
+  client.removeFileFromBucket(fileInfo.bucketid, fileInfo.fileid, function(err) {
+    if (err) {
+      return console.log('error', err.message);
+    }
+    console.log('Removed fileid', fileInfo.fileid);
+    res.status(200).send(fileInfo);
+  });
+
+});
+
+
+/*----------------------------------------------------------------*/
+
+// Get buckets
+app.get('/buckets/list', function(req, res) {
+  client.getBuckets(function(err, buckets) {
+    if (err) {
+      return console.log('error', err.message);
+    }
+    console.log('Retrieved buckets', buckets);
+    res.status(200).send(buckets);
+  });
+});
 
 // List files in buckets
 app.get('/files/list', function(req, res) {
@@ -237,114 +404,6 @@ app.get('/files/list', function(req, res) {
   });
 });
 
-// Upload file to bucket
-app.get('/files/upload', function(req, res) {
-  console.log('Uploading file');
-
-  // Get first bucket that shows up (for demo purposes)
-  // If you know what bucket you're going to put the file in, then use
-  // that bucketId and skip client.getBuckets()
-  client.getBuckets(function(err, buckets) {
-    if (err) {
-      return console.log('error', err.message);
-    }
-
-    // Use the first bucket
-    var bucketId = buckets[0].id;
-    console.log('Uploading file to', bucketId);
-
-    // Select the file to be uploaded
-    var filepath = './public/grumpy.jpg';
-
-    // Path to temporarily store encrypted version of file to be uploaded
-    var tmppath = filepath + '.crypt';
-
-    // Key ring to hold key used to interact with uploaded file
-    // https://storj.github.io/core/KeyRing.html#KeyRing__anchor
-    // storj.keyRing(<keyRingDir>, <passPhrase>)
-    var keyring = storj.KeyRing(KEYRING_DIR, KEYRING_PASS);
-    if (err) {
-      console.log('error', err.message);
-    }
-    if (keyring) {
-      console.log('Created keyring');
-    }
-
-    // Prepare to encrypt file for upload
-    var secret = new storj.DataCipherKeyIv();
-    var encrypter = new storj.EncryptStream(secret);
-
-    // Encrypt the file to be uploaded and store it temporarily
-    fs.createReadStream(filepath)
-      .pipe(encrypter)
-      .pipe(fs.createWriteStream(tmppath))
-      .on('finish', function() {
-        console.log('Finished encrypting');
-
-        // Create token for uploading to bucket by bucketId
-        client.createToken(bucketId, 'PUSH', function(err, token) {
-          if (err) {
-            console.log('error', err.message);
-          }
-          if (token) {
-            console.log('Created token for file');
-          }
-
-          // Store the file using the bucketId, token, and encrypted file
-          console.log('Attempting to store file in bucket');
-          client.storeFileInBucket(bucketId, token.token, tmppath,
-            function(err, file) {
-              if (err) {
-                return console.log('error', err.message);
-              }
-              console.log('Stored file in bucket');
-
-              // Save key for access to download file
-              keyring.set(file.id, secret);
-
-              // Delete tmp file
-              fs.unlink(tmppath, function(err) {
-                if (err) {
-                  return console.log(err);
-                }
-                console.log('Temporary encrypted file deleted');
-              })
-
-              // Send file info to client
-              res.status(200).send(file);
-            });
-        });
-      });
-  });
-});
-
-// Get buckets
-app.get('/buckets/list', function(req, res) {
-  client.getBuckets(function(err, buckets) {
-    if (err) {
-      return console.log('error', err.message);
-    }
-    console.log('Retrieved buckets', buckets);
-    res.status(200).send(buckets);
-  });
-});
-
-// Create bucket
-app.post('/buckets/create', function(req, res) {
-  // Settings for bucket
-  var bucketInfo = {
-    name: req.body.name
-  };
-
-  client.createBucket(bucketInfo, function(err, bucket) {
-    if (err) {
-      return console.log('error', err.message);
-    }
-    console.log('Created bucket', bucket);
-    res.status(200).send(bucket);
-  });
-});
-
 // Authenticate with keypair
 app.get('/keypair/authenticate', function(req, res) {
   // Load keypair from your saved private key
@@ -355,15 +414,6 @@ app.get('/keypair/authenticate', function(req, res) {
   client = storj.BridgeClient(api, { keyPair: keypair });
   console.log('Logged in with keypair');
   res.status(200).send('successful');
-
-  /*
-  client.getInfo(function(err, json) {
-    if (err) {
-      return console.log('error', err.message);
-    }
-    console.log(json);
-  });
-  */
 
 })
 
@@ -385,67 +435,6 @@ app.get('/keypair/retrieve', function(req, res) {
   });
 
 });
-
-//Generate key pair
-/*
-app.get('/keypair/generate', function(req, res) {
-  if (process.env.STORJ_PRIVATE_KEY) {
-    console.log('Private key already exists');
-    return res.status(400).send('duplicate');
-  }
-  // Generate keypair
-  var keypair = storj.KeyPair();
-  console.log('Generating Storj keypair');
-
-  // Add the keypair public key to the user account for authentication
-  client.addPublicKey(keypair.getPublicKey(), function(err) {
-    if (err) {
-      return console.log('error', err.message);
-    }
-
-    // Save the private key for using to login later
-    fs.appendFileSync('./.env', `\nSTORJ_PRIVATE_KEY=${keypair.getPrivateKey()}`);
-    // fs.writeFileSync('./private.key', keypair.getPrivateKey());
-
-    // Send back success to client
-    res.status(200).send(keypair.getPublicKey());
-  });
-
-});
-*/
-
-//Generate key pair
-app.get('/keypair/generate', function(req, res) {
-  /*
-  if (process.env.STORJ_PRIVATE_KEY) {
-    console.log('Private key already exists');
-    return res.status(400).send('duplicate');
-  }
-  */
-  // Generate keypair
-  var keypair = storj.KeyPair();
-  console.log('Generating Storj keypair');
-
-  var dir = './.key-ring/' + keypair.getPublicKey();
-
-  if (!fs.existsSync(dir)){
-    fs.mkdirSync(dir);
-    fs.writeFileSync(dir + '/private.key', keypair.getPrivateKey());
-  }
-
-
-  // Add the keypair public key to the user account for authentication
-  /*
-  client.addPublicKey(keypair.getPublicKey(), function(err) {
-    if (err) {
-      return console.log('error', err.message);
-    }
-  */;
-
-  res.status(200).send(dir);
-
-});
-
 
 //Basic authentication
 app.get('/user/authenticate/user-pass', function(req, res) {

@@ -83,10 +83,6 @@
   padding: 10px 0;
 }
 
-.bucket-btn--create {
-  margin-left: 25px;
-}
-
 .bucket-created {
   margin-top: 10px;
 }
@@ -98,9 +94,13 @@
 }
 
 .input-login {
-  width: 250px;
+  width: 950px;
 }
 
 .main {
   display:none;
+}
+
+.col-md-12 column {
+   text-align:center;
 }
